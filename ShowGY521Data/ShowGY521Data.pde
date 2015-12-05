@@ -1,33 +1,72 @@
 /**
- * Show GY521 Data.
- * 
- * Reads the serial port to get x- and y- axis rotational data from an accelerometer,
- * a gyroscope, and comeplementary-filtered combination of the two, and displays the
- * orientation data as it applies to three different colored rectangles.
- * It gives the z-orientation data as given by the gyroscope, but since the accelerometer
- * can't provide z-orientation, we don't use this data.
- * 
+ * provide a calculation and demonstration in server
+ * final angle used for complementary (Kalmen w/o variation modification): x_fil, y_fil, z_fil
+ * acc & gyro for other calculation: las_acc_gyro.x/y/z_accel/gyro
+ * the demonstration animation is just for reference (there are some issue in specific angle)
  */
  
 import processing.serial.*;
 
+public class acc_gyro
+{
+    public float x_accel;
+    public float y_accel;
+    public float z_accel;
+    public float x_gyro;
+    public float y_gyro;
+    public float z_gyro;
+    public float angle_x;
+    public float angle_y;
+    public float angle_z;
+    
+    public void set_value(float xa, float ya, float za,float xg, float yg, float zg, float ax, float ay, float az){
+    x_accel=xa;
+    y_accel=ya;
+    z_accel=za;
+    x_gyro=xg;
+    y_gyro=yg;
+    z_gyro=zg;
+    angle_x=ax;
+    angle_y=ay;
+    angle_z=az;
+    }
+};
+
+//constant define
+float RADIANS_TO_DEGREES = 180/3.14159; 
+float alpha = 0.8;
+
+acc_gyro last_acc_gyro = new acc_gyro();  //previous acc and gyro
+acc_gyro now_acc_gyro = new acc_gyro();  //current acc and gyro
 Serial  myPort;
 short   portIndex = 2;
 int     lf = 10;       //ASCII linefeed
 String  inString;      //String for testing serial communication
 int     calibrating;
- 
-float   dt;
-float   x_gyr;  //Gyroscope data
+
+float   temp;   //temperature
+float   dt;     //delta time
+float   x_gyr;  //Gyroscope angle
 float   y_gyr;
 float   z_gyr;
-float   x_acc;  //Accelerometer data
+float   x_acc;  //Accelerometer angle
 float   y_acc;
 float   z_acc;
-float   x_fil;  //Filtered data
+float   x_fil;  //Filtered angle
 float   y_fil;
 float   z_fil;
 
+void set_last_angle(acc_gyro input) {
+  last_acc_gyro.x_accel = input.x_accel;
+  last_acc_gyro.y_accel = input.y_accel;
+  last_acc_gyro.z_accel = input.z_accel;
+  last_acc_gyro.x_gyro = input.x_gyro;
+  last_acc_gyro.y_gyro = input.y_gyro;
+  last_acc_gyro.z_gyro = input.z_gyro;
+  last_acc_gyro.angle_x = input.angle_x;
+  last_acc_gyro.angle_y = input.angle_y;
+  last_acc_gyro.angle_z = input.angle_z;
+}
  
 void setup()  { 
 //  size(640, 360, P3D); 
@@ -42,6 +81,7 @@ void setup()  {
   myPort = new Serial(this, portName, 19200);
   myPort.clear();
   myPort.bufferUntil(lf);
+  last_acc_gyro.set_value(0,0,0,0,0,0,0,0,0);
 } 
 
 void draw_rect_rainbow() {
@@ -180,7 +220,7 @@ void draw()  {
 void serialEvent(Serial p) {
 
   inString = (myPort.readString());
-  
+
   try {
     // Parse the data
     String[] dataStrings = split(inString, '#');
@@ -189,37 +229,38 @@ void serialEvent(Serial p) {
       String dataval = dataStrings[i].substring(4);
     if (type.equals("DEL:")) {
         dt = float(dataval);
-        /*
-        print("Dt:");
-        println(dt);
-        */
-        
       } else if (type.equals("ACC:")) {
         String data[] = split(dataval, ',');
-        x_acc = float(data[0]);
-        y_acc = float(data[1]);
-        z_acc = float(data[2]);
-        /*
-        print("Acc:");
-        print(x_acc);
-        print(",");
-        print(y_acc);
-        print(",");
-        println(z_acc);
-        */
+        now_acc_gyro.x_accel = float(data[0]);
+        now_acc_gyro.y_accel = float(data[1]);
+        now_acc_gyro.z_accel = float(data[2]);
+        x_acc = atan(now_acc_gyro.x_accel/sqrt(pow(now_acc_gyro.y_accel,2) + pow(now_acc_gyro.z_accel,2)))*RADIANS_TO_DEGREES;
+        y_acc = atan(now_acc_gyro.y_accel/sqrt(pow(now_acc_gyro.x_accel,2) + pow(now_acc_gyro.z_accel,2)))*RADIANS_TO_DEGREES;
+        z_acc = atan(sqrt(pow(now_acc_gyro.x_accel,2) + pow(now_acc_gyro.y_accel,2))/now_acc_gyro.z_accel)*RADIANS_TO_DEGREES;
       } else if (type.equals("GYR:")) {
         String data[] = split(dataval, ',');
-        x_gyr = float(data[0]);
-        y_gyr = float(data[1]);
-        z_gyr = float(data[2]);
-      } else if (type.equals("FIL:")) {
-        String data[] = split(dataval, ',');
-        x_fil = float(data[0]);
-        y_fil = float(data[1]);
-        z_fil = float(data[2]);
+        now_acc_gyro.x_gyro = float(data[0]);
+        now_acc_gyro.y_gyro = float(data[1]);
+        now_acc_gyro.z_gyro = float(data[2]);
+        x_gyr=now_acc_gyro.x_gyro * dt+last_acc_gyro.angle_x;
+        y_gyr=now_acc_gyro.y_gyro * dt+last_acc_gyro.angle_y;
+        z_gyr=now_acc_gyro.z_gyro * dt+last_acc_gyro.angle_z;
+      } else if (type.equals("TMP:")) {
+        temp = float(dataval);
       }
     }
+    now_acc_gyro.angle_x = alpha * x_acc + (1.0 - alpha) * x_gyr;
+    now_acc_gyro.angle_y = alpha * y_acc + (1.0 - alpha) * y_gyr;
+    now_acc_gyro.angle_z = alpha * z_acc + (1.0 - alpha) * z_gyr;
+    x_fil = now_acc_gyro.angle_x;
+    y_fil = now_acc_gyro.angle_y;
+    z_fil = now_acc_gyro.angle_z;
+    set_last_angle(now_acc_gyro);  //set now to last angle
   } catch (Exception e) {
       println("Caught Exception");
   }
+      
+
+  
 }
+
