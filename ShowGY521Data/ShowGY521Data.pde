@@ -220,7 +220,7 @@ void draw()  {
 void serialEvent(Serial p) {
 
   inString = (myPort.readString());
-
+  print(inString);
   try {
     // Parse the data
     String[] dataStrings = split(inString, '#');
@@ -242,9 +242,9 @@ void serialEvent(Serial p) {
         now_acc_gyro.x_gyro = float(data[0]);
         now_acc_gyro.y_gyro = float(data[1]);
         now_acc_gyro.z_gyro = float(data[2]);
-        x_gyr=now_acc_gyro.x_gyro * dt+last_acc_gyro.angle_x;
-        y_gyr=now_acc_gyro.y_gyro * dt+last_acc_gyro.angle_y;
-        z_gyr=now_acc_gyro.z_gyro * dt+last_acc_gyro.angle_z;
+        x_gyr=now_acc_gyro.x_gyro * dt / (1.0-alpha)+last_acc_gyro.angle_x;
+        y_gyr=now_acc_gyro.y_gyro * dt / (1.0-alpha)+last_acc_gyro.angle_y;
+        z_gyr=now_acc_gyro.z_gyro * dt / (1.0-alpha)+last_acc_gyro.angle_z;
       } else if (type.equals("TMP:")) {
         temp = float(dataval);
       }

@@ -71,7 +71,7 @@ void setup() {
 //    String portName = "COM4";
     
     // open the serial port
-    port = new Serial(this, portName, 115200);
+    port = new Serial(this, portName, 19200);
     
     // send single character to trigger DMP init/start
     // (expected by MPU6050_DMP6 example Arduino sketch)
@@ -104,7 +104,7 @@ void draw() {
     // different coordinate system orientation assumptions between Processing
     // and InvenSense DMP)
     float[] axis = quat.toAxisAngle();
-    rotate(axis[0], -axis[1], axis[3], axis[2]);
+    rotate(-axis[0], -axis[1], -axis[3], axis[2]);
 
     // draw main body in red
     fill(255, 0, 0, 200);
@@ -191,8 +191,8 @@ void serialEvent(Serial port) {
                 ypr[2] = atan(gravity[1] / sqrt(gravity[0]*gravity[0] + gravity[2]*gravity[2]));
     
                 // output various components for debugging
-                //println("q:\t" + round(q[0]*100.0f)/100.0f + "\t" + round(q[1]*100.0f)/100.0f + "\t" + round(q[2]*100.0f)/100.0f + "\t" + round(q[3]*100.0f)/100.0f);
-                //println("euler:\t" + euler[0]*180.0f/PI + "\t" + euler[1]*180.0f/PI + "\t" + euler[2]*180.0f/PI);
+                println("q:\t" + round(q[0]*100.0f)/100.0f + "\t" + round(q[1]*100.0f)/100.0f + "\t" + round(q[2]*100.0f)/100.0f + "\t" + round(q[3]*100.0f)/100.0f);
+                println("euler:\t" + euler[0]*180.0f/PI + "\t" + euler[1]*180.0f/PI + "\t" + euler[2]*180.0f/PI);
                 println("ypr:\t" + ypr[0]*180.0f/PI + "\t" + ypr[1]*180.0f/PI + "\t" + ypr[2]*180.0f/PI);
                 
             }
