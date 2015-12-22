@@ -71,7 +71,7 @@ void setup() {
 //    String portName = "COM4";
     
     // open the serial port
-    port = new Serial(this, portName, 19200);
+    port = new Serial(this, portName, 38400);
     
     // send single character to trigger DMP init/start
     // (expected by MPU6050_DMP6 example Arduino sketch)
@@ -108,7 +108,7 @@ void draw() {
 
     // draw main body in red
     fill(255, 0, 0, 200);
-    box(10, 10, 200);
+    box(40, 40, 200);
     
     // draw front-facing tip in blue
     fill(0, 0, 255, 200);
@@ -119,21 +119,21 @@ void draw() {
     popMatrix();
     
     // draw wings and tail fin in green
-    fill(0, 255, 0, 200);
-    beginShape(TRIANGLES);
-    vertex(-100,  2, 30); vertex(0,  2, -80); vertex(100,  2, 30);  // wing top layer
-    vertex(-100, -2, 30); vertex(0, -2, -80); vertex(100, -2, 30);  // wing bottom layer
-    vertex(-2, 0, 98); vertex(-2, -30, 98); vertex(-2, 0, 70);  // tail left layer
-    vertex( 2, 0, 98); vertex( 2, -30, 98); vertex( 2, 0, 70);  // tail right layer
-    endShape();
-    beginShape(QUADS);
-    vertex(-100, 2, 30); vertex(-100, -2, 30); vertex(  0, -2, -80); vertex(  0, 2, -80);
-    vertex( 100, 2, 30); vertex( 100, -2, 30); vertex(  0, -2, -80); vertex(  0, 2, -80);
-    vertex(-100, 2, 30); vertex(-100, -2, 30); vertex(100, -2,  30); vertex(100, 2,  30);
-    vertex(-2,   0, 98); vertex(2,   0, 98); vertex(2, -30, 98); vertex(-2, -30, 98);
-    vertex(-2,   0, 98); vertex(2,   0, 98); vertex(2,   0, 70); vertex(-2,   0, 70);
-    vertex(-2, -30, 98); vertex(2, -30, 98); vertex(2,   0, 70); vertex(-2,   0, 70);
-    endShape();
+//    fill(0, 255, 0, 200);
+//    beginShape(TRIANGLES);
+//    vertex(-100,  2, 30); vertex(0,  2, -80); vertex(100,  2, 30);  // wing top layer
+//    vertex(-100, -2, 30); vertex(0, -2, -80); vertex(100, -2, 30);  // wing bottom layer
+//    vertex(-2, 0, 98); vertex(-2, -30, 98); vertex(-2, 0, 70);  // tail left layer
+//    vertex( 2, 0, 98); vertex( 2, -30, 98); vertex( 2, 0, 70);  // tail right layer
+//    endShape();
+//    beginShape(QUADS);
+//    vertex(-100, 2, 30); vertex(-100, -2, 30); vertex(  0, -2, -80); vertex(  0, 2, -80);
+//    vertex( 100, 2, 30); vertex( 100, -2, 30); vertex(  0, -2, -80); vertex(  0, 2, -80);
+//    vertex(-100, 2, 30); vertex(-100, -2, 30); vertex(100, -2,  30); vertex(100, 2,  30);
+//    vertex(-2,   0, 98); vertex(2,   0, 98); vertex(2, -30, 98); vertex(-2, -30, 98);
+//    vertex(-2,   0, 98); vertex(2,   0, 98); vertex(2,   0, 70); vertex(-2,   0, 70);
+//    vertex(-2, -30, 98); vertex(2, -30, 98); vertex(2,   0, 70); vertex(-2,   0, 70);
+//    endShape();
     
     popMatrix();
 }

@@ -87,7 +87,6 @@ VectorInt16 aaWorld;    // [x, y, z]            world-frame accel sensor measure
 VectorFloat gravity;    // [x, y, z]            gravity vector
 float euler[3];         // [psi, theta, phi]    Euler angle container
 float ypr[3];           // [yaw, pitch, roll]   yaw/pitch/roll container and gravity vector
-
 // packet structure for InvenSense teapot demo
 uint8_t teapotPacket[14] = { '$', 0x02, 0,0, 0,0, 0,0, 0,0, 0x00, 0x00, '\r', '\n' };
 
@@ -103,6 +102,39 @@ int inputNum=4; //server input for vibration threshold (0=strongest vibration, 4
 volatile bool mpuInterrupt = false;     // indicates whether MPU interrupt pin has gone high
 void dmpDataReady() {
     mpuInterrupt = true;
+}
+
+void calibrate_sensors() {
+  int                   num_readings = 10;
+  int                 x_sum = 0;
+  int                 y_sum = 0;
+  int                 z_sum = 0;
+  int                 x_gyro = 0;
+  int                 y_gyro = 0;
+  int                 z_gyro = 0;
+  
+  Serial.println("Starting Calibration");
+  // Discard the first set of values read from the IMU
+  mpu.getRotation(&x_gyro, &y_gyro, &z_gyro);
+  
+  // Read and average the raw values from the IMU
+  for (int i = 0; i < num_readings; i++) {
+    mpu.getRotation(&x_gyro, &y_gyro, &z_gyro);
+    x_sum += x_gyro;
+    y_sum += y_gyro;
+    z_sum += z_gyro;
+    delay(10);
+  }
+  x_sum /= num_readings;
+  y_sum /= num_readings;
+  z_sum /= num_readings;
+
+  // Store the raw calibration values globally
+  mpu.setXGyroOffset(x_gyro);
+  mpu.setYGyroOffset(y_gyro);
+  mpu.setZGyroOffset(z_gyro);
+  //mpu.setZAccelOffset(1788);
+  Serial.println("Finishing Calibration");
 }
 
 // ================================================================
@@ -148,12 +180,6 @@ void setup() {
     Serial.println(F("Initializing DMP..."));
     devStatus = mpu.dmpInitialize();
 
-    // supply your own gyro offsets here, scaled for min sensitivity
-    mpu.setXGyroOffset(220);
-    mpu.setYGyroOffset(76);
-    mpu.setZGyroOffset(-85);
-    mpu.setZAccelOffset(1788); // 1688 factory default for my test chip
-
     // make sure it worked (returns 0 if so)
     if (devStatus == 0) {
         // turn on the DMP, now that it's ready
@@ -181,6 +207,9 @@ void setup() {
         Serial.println(F(")"));
     }
     pinMode(vbPIN, OUTPUT);  //set vibration pin
+    
+    // calibrate sensor gyro and acc
+    calibrate_sensors();
 }
 
 
@@ -192,7 +221,7 @@ void setup() {
 void loop() {
     // if programming failed, don't try to do anything
     if (!dmpReady) return;
-
+    
     // wait for MPU interrupt or extra packet(s) available
     while (!mpuInterrupt && fifoCount < packetSize) {
         // other program behavior stuff here
@@ -205,7 +234,6 @@ void loop() {
         inputNum = Serial.read(); //setup vibration threshold
     }
     vibration(inputNum);
-    
     // reset interrupt flag and get INT_STATUS byte
     mpuInterrupt = false;
     mpuIntStatus = mpu.getIntStatus();
